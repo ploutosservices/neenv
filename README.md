@@ -1,3 +1,5 @@
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="mark/neenv.svg"><img src="mark/neenv-dark.svg" width="112" alt="neenv's mark: a stepped stone foundation under the ground line, two walls rising from it, open above"></picture></p>
+
 # neenv
 
 *Neenv* (नींव) is a foundation: the ground prepared before any wall goes up. A door, a file store or a mail
@@ -14,7 +16,7 @@ is a commodity part; what is written here is which parts, and why each one is ne
 |---|---|---|
 | <picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/ploutosservices/dvar/main/mark/dvar.svg"><img src="https://raw.githubusercontent.com/ploutosservices/dvar/main/mark/dvar-dark.svg" width="28" alt="dvar's mark"></picture> [dvar](https://github.com/ploutosservices/dvar) | the front door several applications share: one sign-in | every layer below; it is the first structure on the ground |
 | <picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/ploutosservices/chowkidar/HEAD/themes/chowkidar/login/resources/img/chowkidar-v2.svg"><img src="https://raw.githubusercontent.com/ploutosservices/chowkidar/HEAD/themes/chowkidar/login/resources/img/chowkidar-dark-v1.svg" width="28" alt="chowkidar's mark"></picture> [chowkidar](https://github.com/ploutosservices/chowkidar) | the guard inside dvar's sign-in server | what dvar needs |
-| [bhandara](https://github.com/ploutosservices/bhandara) | a file store that every application keeps its files in | PostgreSQL, an S3-style store, certificates, names |
+| <picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/ploutosservices/bhandara/main/mark/bhandara.svg"><img src="https://raw.githubusercontent.com/ploutosservices/bhandara/main/mark/bhandara-dark.svg" width="28" alt="bhandara's mark"></picture> [bhandara](https://github.com/ploutosservices/bhandara) | a file store that every application keeps its files in | PostgreSQL, an S3-style store, certificates, names |
 | [dakiya](https://github.com/ploutosservices/dakiya) | one mail-sending service for every application | PostgreSQL, certificates, names, a secret store |
 
 Anything built later stands on the same ground. Nothing in this table can exist without it.

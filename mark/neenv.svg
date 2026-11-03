@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="t">
+  <title id="t">Neenv — a stepped stone foundation under the ground line, two walls rising from it, open above</title>
+  <g fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+    <!-- two walls rising from the ground, no roof -->
+    <path d="M32 58 V16 M96 58 V16"/>
+    <!-- the ground line -->
+    <path d="M6 58 H122"/>
+    <!-- the foundation below it: three courses of stone, each wider than the one above -->
+    <path d="M24 58 V76 H16 V94 H8 V112 H120 V94 H112 V76 H104 V58"/>
+    <path d="M24 76 H104 M16 94 H112"/>
+    <path d="M50 58 V76 M78 58 V76 M38 76 V94 M64 76 V94 M90 76 V94 M28 94 V112 M52 94 V112 M76 94 V112 M100 94 V112"/>
+  </g>
+</svg>
