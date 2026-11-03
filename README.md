@@ -12,8 +12,8 @@ is a commodity part; what is written here is which parts, and why each one is ne
 
 | Project | What it is | What it needs from neenv |
 |---|---|---|
-| [dvar](https://github.com/ploutosservices/dvar) | the front door several applications share: one sign-in | every layer below; it is the first structure on the ground |
-| [chowkidar](https://github.com/ploutosservices/chowkidar) | the guard inside dvar's sign-in server | what dvar needs |
+| <picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/ploutosservices/dvar/main/mark/dvar.svg"><img src="https://raw.githubusercontent.com/ploutosservices/dvar/main/mark/dvar-dark.svg" width="28" alt="dvar's mark"></picture> [dvar](https://github.com/ploutosservices/dvar) | the front door several applications share: one sign-in | every layer below; it is the first structure on the ground |
+| <picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/ploutosservices/chowkidar/HEAD/themes/chowkidar/login/resources/img/chowkidar-v2.svg"><img src="https://raw.githubusercontent.com/ploutosservices/chowkidar/HEAD/themes/chowkidar/login/resources/img/chowkidar-dark-v1.svg" width="28" alt="chowkidar's mark"></picture> [chowkidar](https://github.com/ploutosservices/chowkidar) | the guard inside dvar's sign-in server | what dvar needs |
 | [bhandara](https://github.com/ploutosservices/bhandara) | a file store that every application keeps its files in | PostgreSQL, an S3-style store, certificates, names |
 | [dakiya](https://github.com/ploutosservices/dakiya) | one mail-sending service for every application | PostgreSQL, certificates, names, a secret store |
 
