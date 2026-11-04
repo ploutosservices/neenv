@@ -53,6 +53,14 @@ For a trial, [dvar's demo](https://github.com/ploutosservices/dvar#2-try-it) pre
 throwaway certificate authority, nginx, PostgreSQL, an S3 store and a mail sink, in one compose file you can
 read in one sitting.
 
+## Patterns
+
+How one layer is built well, with drills you can run yourself:
+
+- [A root certificate limited to your own names](patterns/constrained-root/README.md). The certificate
+  authority's root vouches only for your private names, so a stolen key cannot forge anyone else's website. It
+  covers moving an existing root to it without re-issuing a key.
+
 ## Licence
 
 Apache-2.0. Copyright 2026 Ploutos Services LLC.

@@ -1,0 +1,12 @@
+# What the root may vouch for: one openssl nameConstraints value, one part a line (the drills join them).
+# DNS: every private name lives under one suffix. home.arpa is the private-use suffix of RFC 8375; put yours here.
+# IP: the private IPv4 ranges and loopback. Every address not listed is refused, IPv6 and 100.64.0.0/10 included;
+# to permit them add e.g. permitted;IP:fc00::/fe00:: and permitted;IP:100.64.0.0/255.192.0.0 (the mask is an address).
+# An email-style name carries no constraint. A certificate with no DNS name has its hostname-like CN checked by
+# OpenSSL against the DNS limit (CN=alice.laptop is refused; a CN with '@' or no dots is not).
+critical,
+permitted;DNS:home.arpa,
+permitted;IP:10.0.0.0/255.0.0.0,
+permitted;IP:172.16.0.0/255.240.0.0,
+permitted;IP:192.168.0.0/255.255.0.0,
+permitted;IP:127.0.0.0/255.0.0.0
