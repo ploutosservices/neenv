@@ -68,6 +68,20 @@ How one layer is built well, with drills you can run yourself:
 - [A root certificate limited to your own names](patterns/constrained-root/README.md). The certificate
   authority's root vouches only for your private names, so a stolen key cannot forge anyone else's website. It
   covers moving an existing root to it without re-issuing a key.
+- [The root of trust](patterns/root-of-trust/README.md). Who signs what, where each key is kept, how the root
+  is replaced, and how a certificate is taken back.
+- [Names, public and private](patterns/names/README.md). Every name in git, resolvable anywhere, answered only to
+  the private network when it is private.
+- [Tenants](patterns/tenants/README.md). One declaration of each tenant's names, an edge that tells applications
+  which tenant a request is for, and each application deciding who enters.
+- [Many tenants' sites from one content system](patterns/cms-tenant/README.md). One installation for every
+  tenant, with the edge and the sign-in keeping them apart.
+- [Environments](patterns/environments/README.md). Development, staging and production from one declaration, and
+  a check that fails on anything two of them share by accident.
+- [The dev box](patterns/dev-box/README.md). One person and several AI agents on one machine, each its own user
+  and identity, the auditor walled off.
+- [Walk-through](patterns/walk-through/README.md). One new tenant, from a domain name to a signed-in page.
+- [The practice](patterns/the-practice/README.md). The written rules that let agents build and run it.
 
 ## Licence
 

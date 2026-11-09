@@ -22,7 +22,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 TITLE = "neenv"
 # Reading order: the foundation's own patterns first, in the order they are built on, then the walk-through that ties
 # them together, then the practice. A pattern not named here follows, by name.
-ORDER = ["constrained-root", "names", "tenants", "cms-tenant", "walk-through", "the-practice"]
+ORDER = ["constrained-root", "root-of-trust", "names", "tenants", "cms-tenant", "environments", "dev-box", "walk-through", "the-practice"]
 
 
 def pages(tree):

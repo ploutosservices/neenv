@@ -1,0 +1,9 @@
+# Whether a value may be identical in production and another environment. The application's owner decides.
+IS_PRODUCTION          needs-own  the one environment fact the application reads
+PUBLIC_ORIGIN          needs-own  each environment answers at its own name
+DATABASE_URL           needs-own  a copy must never write to production's database
+SIGN_IN_ISSUER         needs-own  a copy must never send its users to production's sign-in
+SIGN_IN_CLIENT_SECRET  needs-own  one client per environment at the door
+MAIL_SEND_URL          needs-own  each environment's own mail service, which knows which environment it serves
+SIGN_IN_CLIENT_ID      inherits   a public name; the realm in SIGN_IN_ISSUER already differs
+MAP_TILES_URL          inherits   a public, read-only map service someone else runs

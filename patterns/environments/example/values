@@ -1,0 +1,23 @@
+# The infrastructure's values. Production carries every key. Another environment takes production's value where
+# it sets none, EXCEPT a secret reference (secret:<app>/<environment>/<name>): every environment names its own, and
+# the render refuses one that is missing or that names another environment.
+production   IS_PRODUCTION          yes
+production   PUBLIC_ORIGIN          https://notes.example.org
+production   DATABASE_URL           postgres://notes@db.example.org/notes
+production   SIGN_IN_ISSUER         https://sign-in.example.org/realms/production
+production   SIGN_IN_CLIENT_ID      notes
+production   SIGN_IN_CLIENT_SECRET  secret:notes/production/sign-in   # pragma: allowlist secret
+production   MAIL_SEND_URL          https://mail-send.example.org
+production   MAP_TILES_URL          https://tiles.example.net
+staging      IS_PRODUCTION          no
+staging      PUBLIC_ORIGIN          https://notes.staging.example.test
+staging      DATABASE_URL           postgres://notes_stg@db.staging.example.test/notes_staging
+staging      SIGN_IN_ISSUER         https://sign-in.example.test/realms/staging
+staging      SIGN_IN_CLIENT_SECRET  secret:notes/staging/sign-in   # pragma: allowlist secret
+staging      MAIL_SEND_URL          https://mail-send.staging.example.test
+development  IS_PRODUCTION          no
+development  PUBLIC_ORIGIN          https://notes.dev.example.test
+development  DATABASE_URL           postgres://notes@localhost/notes
+development  SIGN_IN_ISSUER         https://sign-in.example.test/realms/development
+development  SIGN_IN_CLIENT_SECRET  secret:notes/development/sign-in   # pragma: allowlist secret
+development  MAIL_SEND_URL          https://mail-send.dev.example.test

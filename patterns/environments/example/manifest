@@ -1,0 +1,9 @@
+# The application's manifest: what it needs. No host, no address, no environment name, no value.
+needs: IS_PRODUCTION
+needs: PUBLIC_ORIGIN
+needs: DATABASE_URL
+needs: SIGN_IN_ISSUER
+needs: SIGN_IN_CLIENT_ID
+needs: SIGN_IN_CLIENT_SECRET
+needs: MAIL_SEND_URL
+needs: MAP_TILES_URL
