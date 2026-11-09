@@ -2,7 +2,9 @@
 # drill-names.sh: a private name answers only a private source; a public name may carry a private address.
 #
 #   ./drill-names.sh                       # local: a throwaway nginx with the fence; every check must pass
-#   ARM=nofence ./drill-names.sh           # the same nginx without the fence: the refusal checks must FAIL
+#   ARM=nofence ./drill-names.sh           # the same nginx without the fence: exactly the two refusal checks must FAIL
+#   Exit codes, the same in every neenv drill: 0 the run proved what it set out to (no ARM: every check passed;
+#   an ARM: exactly that arm's checks failed); 1 it did not; 2 it could not run (a missing tool, nginx -t).
 #   ./drill-names.sh dns NAME ADDRESS [RESOLVER ...]
 #                                          # public resolvers answer NAME with the private ADDRESS
 #
@@ -152,8 +154,9 @@ case ${1:-local} in
 esac
 
 if [[ $ARM == nofence ]]; then
-  if (( fails )); then echo "ARM: $fails check(s) failed without the fence, as they must"; exit 1; fi
-  echo "ARM: every check passed without the fence: the drill cannot tell a refusal from a served page"; exit 3
+  # The two refusals are the fence's whole job; the four other checks do not depend on it and must still pass.
+  if (( fails == 2 )); then echo "ARM: exactly the 2 refusal checks failed without the fence, as they must"; exit 0; fi
+  echo "ARM: $fails check(s) failed without the fence, not the 2 refusals: the drill cannot tell a refusal from a served page"; exit 1
 fi
 (( fails == 0 )) || { echo "$fails check(s) failed"; exit 1; }
 echo "all checks passed"

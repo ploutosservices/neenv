@@ -245,6 +245,16 @@ which need the store itself.
 - **Some agents have root.** The agent that maintains the box, and the agents allowed to run containers, can
   read everything on it, including the auditor's home. That is the accepted price of not sending setup work
   back to the person.
+- **Reading another agent's tree with git needs one more step.** The modes let an agent read the files, but git
+  refuses a repository owned by another user ("detected dubious ownership"). The reader passes
+  `git -c safe.directory=<path>` for that one command. The box does not declare it for every agent's tree yet,
+  and the drill checks modes, not a git read.
+- **One tool still lives in one agent's home.** The headless browser for page tests (Playwright and its browser
+  build) sits in one agent's home, so another agent can run it only by pointing at that cache. It breaks the rule
+  above until the box declares a shared install.
+- **The code host's private name is not trusted for ssh.** The box trusts every private name's ssh host
+  certificate, but the code host's ssh server presents a plain host key, so a dependency fetched over ssh by that
+  name fails, and each install rewrites the address to the public name instead.
 - **The standby only follows.** The nightly sync copies one way. State built on the standby must be saved to
   the hub by hand, and the main box must then restore before its next save, which refuses until it does.
   Session transcripts never move between boxes.

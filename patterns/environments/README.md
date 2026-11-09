@@ -229,6 +229,14 @@ environments holding the same bytes. It runs daily and on demand.
   value stored in a database row or on a shared disk, or an environment nothing declares. The restore write-back
   covers the settings an application keeps in its data only where that application has a setup step that writes
   them; an application without one has no such cover.
+- **A refresh drops what the application installed in its database, and replaces what only the target held.** It
+  drops and recreates the database, so every grant and row-level policy the application installed is gone until
+  the application puts them back: one application re-applies its policies before it verifies them, after a refresh
+  once left staging with every row present and none readable. A dump can also leave tables owned by the database
+  superuser, so a migration's `GRANT ... ON ALL TABLES` is refused; grant table by table, to the tables the
+  application owns. And a refresh replaces data that existed only on the target: a development restore replaced a
+  developer's own test rows with production's. Each application should say which tables a refresh owns and which
+  it must leave alone; none does yet.
 - **Each application spells its restore separately.** Staging refresh and development restore share code within an
   application, but each application's restore (dump, ownership, migrations, write-back) is its own script; there is
   no one restore every application goes through.

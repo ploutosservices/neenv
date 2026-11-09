@@ -7,7 +7,10 @@
 #   ./drill-device.sh serve ADDR     the same, then serves two pages on ADDR (an address of this machine on your
 #                                    private network) for HOURS (default 2) and prints what to do on the device
 #   ./drill-device.sh stop           stops the pages and deletes the directory (`serve` deletes the root key at once)
-#   ARM=noconstraint                 the same root WITHOUT the constraint: `check` must then FAIL (exit 1)
+#   ARM=noconstraint                 the same root WITHOUT the constraint: `check` must then fail exactly the two
+#                                    "foreign" refusals (openssl and curl), and nothing else
+#   Exit codes, the same in every neenv drill: 0 the run proved what it set out to (no ARM: every check passed;
+#   an ARM: exactly that arm's checks failed); 1 it did not; 2 it could not run (a missing tool, a setup step).
 #   NC_FILE=<file>                   the constraint (default: name-constraints.txt beside this script)
 # Needs: OpenSSL >= 3.0 (not LibreSSL), python3, curl; `serve` also Linux's ip, setsid and GNU timeout.
 # The two pages:  control  https://ADDR:8444/  a private address the root permits: must OPEN
@@ -84,9 +87,18 @@ wire() {   # the same proof over the wire, with curl holding the drill root alon
 
 case "${1:-}" in
   check)
-    rc=0; build 127.0.0.1 || rc=1
-    if [ $rc = 0 ]; then serve_pages 127.0.0.1 10000; wire 127.0.0.1 10000 || rc=1; fi
+    # build checks OpenSSL and wire checks curl; both print PASS/FAIL lines, judged together below. A run that
+    # printed no check at all could not run (exit 2).
+    rc=0; B=$(mktemp); build 127.0.0.1 > "$B" || rc=1; cat "$B"
+    if [ -n "$W" ] && [ -f "$W/root.crt" ]; then serve_pages 127.0.0.1 10000; wire 127.0.0.1 10000 >> "$B" || rc=1; sed -n '/^PASS curl\|^FAIL curl/p' "$B"; fi
+    out=$(cat "$B"); rm -f "$B"
     kill $(cat "$W/pids" 2>/dev/null) 2>/dev/null || true; rm -rf "$W"   # its own directory; a running `serve` is left alone
+    grep -q '^\(PASS\|FAIL\) ' <<< "$out" || { echo "== check could not run"; exit 2; }
+    if [ -n "${ARM:-}" ]; then
+      got=$(awk '/^FAIL/{print $2"-"$3}' <<< "$out" | sort | paste -sd' ')
+      [ "$got" = "curl-foreign openssl-foreign" ] && { echo "== ARM: exactly the two foreign refusals failed, as they must"; exit 0; }
+      echo "== ARM: expected to fail [curl-foreign openssl-foreign], failed [$got]"; exit 1
+    fi
     [ $rc = 0 ] && echo "== check passed" || echo "== check FAILED"; exit $rc ;;
   serve)
     addr=${2:?usage: $0 serve ADDR}

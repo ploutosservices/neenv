@@ -261,8 +261,13 @@ non-production environment.
   back the others in the same pooled database or bucket is not written.
 - **Most databases rely on the application.** In a pooled database every query must filter by tenant. One store
   guards its rows in the database itself, with PostgreSQL row-level security on every table; it costs query plans (a
-  reader that must scan everything is given its own role that bypasses the policy, read-only). The other pooled
-  databases have no database-level guard, and how to give them one is not written.
+  reader that must scan everything is given its own role that bypasses the policy, read-only). That store's guard is
+  published as one library, [ghera](https://github.com/ploutosservices/ghera), with its own compose drill; it is
+  the how for any pooled PostgreSQL store. Its cost, measured on one application's development copy: a wide report
+  query took 36 s under the policy and 87 ms through the bypassing reader, and a sweep of 307 pages took 108.5 s
+  against 8.5 s until it read through that reader. The policy defeats the query planner on wide joins, so a trusted
+  reader needs its own bypassing role, and that role is then the fence's one hole. The other pooled databases have
+  no database-level guard yet, and MariaDB, which some of them use, has no row-level security.
 - **Encryption does not separate tenants.** The object store's key is one per service. A key per tenant, which would
   make deleting a tenant's files as simple as destroying its key, is not designed.
 - **Loopback trusts every process on the edge's machine.** Binding to `127.0.0.1` keeps the network out, not the

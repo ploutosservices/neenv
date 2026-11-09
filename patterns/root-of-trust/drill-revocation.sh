@@ -5,20 +5,22 @@
 # deleted on exit. No real key is read and nothing is contacted.
 #
 #   usage: ./drill-revocation.sh
-#   ARM=no-revoke   the lost device is never put on the list: "revoked" and "new-root-revoked" must FAIL (exit 1)
+#   ARM=no-revoke   the lost device is never put on the list: "revoked" and "new-root-revoked" must FAIL
 #   ARM=no-cross    the person CA is never cross-signed by the new root: every check of a client that holds
-#                   the new root alone with a person certificate must FAIL (exit 1)
+#                   the new root alone with a person certificate must FAIL (the four named in EXPECT below)
 #   ARM=no-issuer-check  the person edge admits any verified chain: "service-at-person-edge-issuer-check" must FAIL
+#   Exit codes, the same in every neenv drill: 0 the run proved what it set out to (no ARM: every check passed;
+#   an ARM: exactly that arm's checks failed); 1 it did not; 2 it could not run (a missing tool, a setup step).
 # Needs: bash and OpenSSL >= 3.0 (not LibreSSL: macOS ships LibreSSL, use Homebrew's openssl@3). Linux or macOS.
 # One line per check: PASS/FAIL <case> want=<x> got=<y>. A refusal counts only for its stated reason; any other
-# error is got=error(...) and FAILs. Exit 1 on any FAIL and on any setup step that fails.
+# error is got=error(...) and FAILs.
 set -uo pipefail
 OPENSSL=${OPENSSL:-openssl}
-case "$($OPENSSL version 2>/dev/null)" in OpenSSL\ [3-9]*) ;; *) echo "SETUP FAILED: needs OpenSSL >= 3.0, found: $($OPENSSL version 2>&1)"; exit 1;; esac
-case "${ARM:-}" in ''|no-revoke|no-cross|no-issuer-check) ;; *) echo "SETUP FAILED: unknown ARM=${ARM}"; exit 1;; esac
+case "$($OPENSSL version 2>/dev/null)" in OpenSSL\ [3-9]*) ;; *) echo "SETUP FAILED: needs OpenSSL >= 3.0, found: $($OPENSSL version 2>&1)"; exit 2;; esac
+case "${ARM:-}" in ''|no-revoke|no-cross|no-issuer-check) ;; *) echo "SETUP FAILED: unknown ARM=${ARM}"; exit 2;; esac
 umask 077
 W=$(mktemp -d); trap 'rm -rf "$W"' EXIT
-must() { "$@" >/dev/null 2>"$W/err" || { echo "SETUP FAILED: $* — $(head -c 300 "$W/err")"; exit 1; }; }
+must() { "$@" >/dev/null 2>"$W/err" || { echo "SETUP FAILED: $* — $(head -c 300 "$W/err")"; exit 2; }; }
 key() { must $OPENSSL ecparam -name prime256v1 -genkey -noout -out "$W/$1.key"; }
 NOW=$(date +%s)
 
@@ -116,4 +118,14 @@ say "person-at-person-edge-issuer-check"   ok                                   
 
 f=$(grep -c '^FAIL' "$W/out"); p=$(grep -c '^PASS' "$W/out")
 echo "${ARM:+ARM=$ARM: }$p passed, $f failed"
-[ "$f" -eq 0 ]
+[ -z "${ARM:-}" ] && { [ "$f" -eq 0 ]; exit; }
+# An ARM run passes only when EXACTLY its checks failed: fewer means a check cannot fail, more means the arm broke
+# something it was not meant to.
+case "$ARM" in
+  no-revoke)       EXPECT="new-root-revoked revoked" ;;
+  no-cross)        EXPECT="new-root-kept-device new-root-old-list-only new-root-revoked person-at-person-edge-issuer-check" ;;
+  no-issuer-check) EXPECT="service-at-person-edge-issuer-check" ;;
+esac
+GOT=$(awk '/^FAIL/{print $2}' "$W/out" | sort | paste -sd' ')
+[ "$GOT" = "$EXPECT" ] && { echo "ARM: exactly the expected checks failed, as they must"; exit 0; }
+echo "ARM: expected to fail [$EXPECT], failed [$GOT]"; exit 1

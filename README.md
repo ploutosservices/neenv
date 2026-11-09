@@ -83,6 +83,21 @@ How one layer is built well, with drills you can run yourself:
 - [Walk-through](patterns/walk-through/README.md). One new tenant, from a domain name to a signed-in page.
 - [The practice](patterns/the-practice/README.md). The written rules that let agents build and run it.
 
+### What a drill's exit code means
+
+Every drill answers the same way, so a script can run them all:
+
+| Exit | Run without `ARM` | Run with `ARM=<name>` (one fix removed on purpose) |
+|---|---|---|
+| 0 | every check passed | exactly the checks that arm should break failed, and no others |
+| 1 | a check failed | the arm did not break what it should, or broke something else: the drill cannot tell |
+| 2 | it could not run: a missing tool, an unknown arm, a setup step that failed | the same |
+
+An arm run that exits 0 is the proof that each check can fail. A check that never fails proves nothing. Two drills
+carry their arms inside one command instead: `drill-environments.sh selftest` and the practice's
+`drill-done.sh selftest` run one passing case and several broken ones, and exit 0 only when each comes out as it
+must.
+
 ## Licence
 
 Apache-2.0. Copyright 2026 Ploutos Services LLC.

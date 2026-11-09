@@ -4,7 +4,9 @@
 # key re-issued? Everything is a THROWAWAY PKI in a private temporary directory, deleted on exit. No real key is read.
 #
 #   usage: ./drill-clients.sh [constraints-file]        (default: name-constraints.txt beside this script)
-#   ARM=noconstraint  the same root WITHOUT the constraint: every "refused(constraint)" case must then FAIL (exit 1).
+#   ARM=noconstraint  the same root WITHOUT the constraint: every "refused(constraint)" case, and no other, must FAIL.
+#   Exit codes, the same in every neenv drill: 0 the run proved what it set out to (no ARM: every check passed;
+#   an ARM: exactly that arm's checks failed); 1 it did not; 2 it could not run (a missing tool, a setup step).
 #   CLIENTS=openssl,cross,order,go,java,nginx,chromium,firefox   (default: openssl, cross and order, plus every
 #                     other client whose tool is present; a missing tool prints SKIP)
 #   DOCKER="sudo -n docker"  how to run docker (Go, Java, nginx and the NSS tools run in containers); default: docker
@@ -15,7 +17,7 @@
 # 'permitted subtree violation', Go's CANotAuthorizedForThisName, and for browsers (whose error codes are generic)
 # refused under the limited root while the same leaf opens under a twin root without the limit. Any other error
 # is got=error(...) and FAILs.
-# INFO lines record, never fail. Exit 1 on any FAIL, and on any setup step that fails.
+# INFO lines record, never fail.
 set -uo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 NC=$(grep -v '^#' "${1:-$HERE/name-constraints.txt}" | tr -d '\n ')
@@ -26,7 +28,7 @@ trap 'kill $(cat "$W/pids" 2>/dev/null) 2>/dev/null; [ -n "$NGX" ] && $DOCKER rm
 # $W holds the CA keys and stays private. $W/pub is the only directory a container sees: certificates and the
 # throwaway leaf keys the servers need, never a CA key.
 mkdir "$W/pub" "$W/nss"
-must() { "$@" >/dev/null 2>"$W/err" || { echo "SETUP FAILED: $* — $(head -c 300 "$W/err")"; exit 1; }; }
+must() { "$@" >/dev/null 2>"$W/err" || { echo "SETUP FAILED: $* — $(head -c 300 "$W/err")"; exit 2; }; }
 say() { if [ "$3" = "$4" ]; then echo "PASS $1 $2 want=$3 got=$4"; else echo "FAIL $1 $2 want=$3 got=$4"; fi; }
 key() { must openssl ecparam -name prime256v1 -genkey -noout -out "$W/$1.key"; }
 have() { case ",${CLIENTS:-auto}," in *",$1,"*) return 0;; *",auto,"*) case $1 in openssl|cross|order) return 0;; esac; eval "$2" >/dev/null 2>&1;; *) return 1;; esac; }
@@ -239,4 +241,10 @@ else echo "SKIP chromium, firefox (need PLAYWRIGHT, node, chromium for Chromium,
 
 f=$(grep -c '^FAIL' "$W/out"); p=$(grep -c '^PASS' "$W/out")
 echo "== $p passed, $f failed (constraint: ${ARM:-$NC})"
-[ "$f" = 0 ]
+[ -z "${ARM:-}" ] && { [ "$f" = 0 ]; exit; }
+# An ARM run passes only when every refusal failed and nothing else did: a refusal that still held proves the
+# constraint was not what refused it; any other failure means the arm broke something it was not meant to.
+held=$(grep -c '^PASS .* want=refused(constraint)' "$W/out"); other=$(grep '^FAIL' "$W/out" | grep -vc 'want=refused(constraint)')
+n=$(grep -c 'want=refused(constraint)' "$W/out")
+[ "$n" -gt 0 ] && [ "$held" = 0 ] && [ "$other" = 0 ] && { echo "== ARM: all $n refusals failed and nothing else, as they must"; exit 0; }
+echo "== ARM: $held refusal(s) still held, $other other check(s) failed"; exit 1
