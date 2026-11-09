@@ -38,7 +38,9 @@ Each layer is a commodity part. The right-hand column is what we run for it; any
 | **A public domain** | The door's address: the one place a stranger is sent to sign in. | Keycloak behind the door's public name |
 | **A scheduler** | Every recurring job (backups, checks, renewals) runs in one place, where its last run can be seen. | Windmill; its jobs live in git |
 | **Backups** | Every store copied each night to a second place and a third, off site, and a restore proved on a schedule rather than assumed. | restic to a REST server at home and an append-only twin abroad; a nightly job restores and checks |
-| **Monitoring** | Every layer and every service is checked, and a failure reaches a person. | Prometheus, Alertmanager and Grafana, with the blackbox and node exporters |
+| **Monitoring** | Every layer and every service is checked, and a failure reaches a person. | Prometheus, Alertmanager and Grafana, with the blackbox and node exporters; alerts land in Mattermost and by email |
+| **Mail** | Mail in for a named list of addresses, kept where a machine reads it; mail out signed so it is not taken for spam. | Postfix at the edge accepting only the listed addresses, with OpenDKIM; Dovecot stores what arrives (LMTP into Maildir, read by machines, no IMAP served); outgoing mail through Google Workspace |
+| **Chat** | Where people and agents write to each other, and where alerts and job results are posted. | Mattermost, signed in through the door |
 | **A secret store** | Passwords and keys live in one store, never in a file beside the service that uses them. | OpenBao for machines (each reads with its own certificate); Vaultwarden for people |
 | **Configuration and code** | Every machine is built from text, so a lost one is rebuilt rather than repaired. | Ansible from Gitea; Gitea Actions runs the checks and the deploys |
 
