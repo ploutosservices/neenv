@@ -23,18 +23,24 @@ Anything built later stands on the same ground. Nothing in this table can exist 
 
 ## The layers
 
-| Layer | What it carries |
-|---|---|
-| **Machines and power** | Servers that stay up, and a UPS under each one that shuts it down cleanly when the battery runs low. |
-| **The network** | A private network joining every site and every device (WireGuard, for example), so a phone away from home reaches a service as if it were at home. |
-| **DNS** | A name for every service. A name is how a person finds a service, and how the door knows where to send them back. |
-| **A certificate authority** | One root that every machine trusts. A browser trusts the door, the door trusts a service's back channel, and the proxy trusts a service's certificate, all because of that root. |
-| **A reverse proxy** | Holds TLS for every name. It verifies a calling service's certificate and tells the service behind it who is calling. |
-| **PostgreSQL** | Holds the state of the door and of the services that serve other services. |
-| **A public domain** | The door's address: the one place a stranger is sent to sign in. |
-| **A scheduler** | Every recurring job (backups, checks, renewals) runs in one place, where its last run can be seen. |
-| **Monitoring** | Every layer and every service is checked, and a failure reaches a person. |
-| **A secret store** | Passwords and keys live in one store, never in a file beside the service that uses them. |
+Each layer is a commodity part. The right-hand column is what we run for it; any part that does the same job will do.
+
+| Layer | What it carries | What we run |
+|---|---|---|
+| **Machines and power** | Servers that stay up, and a UPS under each one that shuts it down cleanly when the battery runs low. | Debian on bare metal, no virtual machines; NUT watches each UPS |
+| **The network** | A private network joining every site and every device, so a phone away from home reaches a service as if it were at home. | WireGuard, a full mesh between the sites; Tailscale as a second road where no port can be opened inward |
+| **DNS** | A name for every service. A name is how a person finds a service, and how the door knows where to send them back. | Bind9 on several servers for private names; Cloudflare for public ones; OctoDNS writes both from files in git |
+| **A catalogue** | One list of every machine, service, name and address, which the other layers read instead of keeping their own copies. | NetBox, loaded from files in git; Ansible reads its machines from it |
+| **A certificate authority** | One root that every machine trusts. A browser trusts the door, the door trusts a service's back channel, and the proxy trusts a service's certificate, all because of that root. | step-ca, with ACME for servers and SCEP for phones; the root is limited to our own names (pattern below) |
+| **A reverse proxy** | Holds TLS for every name. It verifies a calling service's certificate and tells the service behind it who is calling. | nginx |
+| **PostgreSQL** | Holds the state of the door and of the services that serve other services. | PostgreSQL; MariaDB for the older applications |
+| **An object store** | Files kept as objects, encrypted with a key the store never sees. | Garage (S3-compatible), with customer-supplied keys |
+| **A public domain** | The door's address: the one place a stranger is sent to sign in. | Keycloak behind the door's public name |
+| **A scheduler** | Every recurring job (backups, checks, renewals) runs in one place, where its last run can be seen. | Windmill; its jobs live in git |
+| **Backups** | Every store copied each night to a second place and a third, off site, and a restore proved on a schedule rather than assumed. | restic to a REST server at home and an append-only twin abroad; a nightly job restores and checks |
+| **Monitoring** | Every layer and every service is checked, and a failure reaches a person. | Prometheus, Alertmanager and Grafana, with the blackbox and node exporters |
+| **A secret store** | Passwords and keys live in one store, never in a file beside the service that uses them. | OpenBao for machines (each reads with its own certificate); Vaultwarden for people |
+| **Configuration and code** | Every machine is built from text, so a lost one is rebuilt rather than repaired. | Ansible from Gitea; Gitea Actions runs the checks and the deploys |
 
 ## Before building on it
 
@@ -45,9 +51,9 @@ Check that each of these is true first:
 - [ ] DNS for every name the services answer to;
 - [ ] a certificate authority whose root every machine trusts;
 - [ ] a reverse proxy holding TLS for those names;
-- [ ] PostgreSQL;
+- [ ] PostgreSQL and an object store;
 - [ ] a public domain for the door;
-- [ ] a scheduler, monitoring and a secret store.
+- [ ] a scheduler, backups that are restored on a schedule, monitoring and a secret store.
 
 For a trial, [dvar's demo](https://github.com/ploutosservices/dvar#2-try-it) prepares a small neenv for you: a
 throwaway certificate authority, nginx, PostgreSQL, an S3 store and a mail sink, in one compose file you can
