@@ -42,17 +42,18 @@ pattern with a drill; *consider* means it is open; *declined* means it is not do
 | Security | The development machine blocked from production by the machines, not only by credentials | adopt |
 | Operations | A one-page incident runbook | adopt |
 | Delivery | Build once and promote the same artefact (a version or digest) | adopt |
-| Information | Retention, deletion and a tenant's departure | adopt, once a tenant outside the family exists |
-| Security | Per-agent sandboxes beyond the production block | consider |
+| Information | Retention, deletion and a tenant's departure | adopt: there are tenants outside the family |
+| Security | Per-agent sandboxes beyond the production block | declined: each agent is already its own operating-system user with its own work tree and identity ([The dev box](../dev-box/README.md)) |
 | Security | Secret rotation on a schedule (OpenBao leases, dynamic database credentials) | declined: the owner rotates after a leak, all at once on one day, not on a calendar; scheduled rotation broke more than it protected here. Where secrets live and who reads them is in [The root of trust](../root-of-trust/README.md) |
 | Security | A hardware token for the CA keys | declined by the owner's ruling: no offline root and no separate custody to remember; the root key is an item in the password manager, written back only to mint an intermediate and removed again ([Disaster recovery](../disaster-recovery/README.md)) |
-| Reliability | A standby for the CA and the door | consider |
-| Reliability | Restoring one tenant without the others | consider |
-| Operations | Service objectives and a runbook per alert | consider |
-| Delivery | Rollback without losing data; expand-then-contract migrations | consider |
-| Information | Masking data copied to staging | declined: the owner's ruling is that developers work against current production data; every tenant here is the family's. An estate with outside tenants would need it |
+| Reliability | A standby for the CA and the door | adopt (the door has a cold standby abroad; the CA has none) |
+| Reliability | Restoring one tenant without the others | adopt: there are tenants outside the family |
+| Operations | A runbook per alert | adopt: every alert already carries its next step in its description; the pattern makes that a rule a check enforces |
+| Operations | Service objectives (SLOs) | declined: one decider, no contracts that promise an availability figure; the alerts say what is broken and what to do |
+| Delivery | Rollback without losing data; expand-then-contract migrations | declined from neenv: how an application changes its own schema is each application owner's practice, not the foundation's |
+| Information | Masking data copied to staging | declined by the owner's ruling: developers work against current production data, the outside tenants' included. The cost is stated, not hidden: a development machine holds real tenant data. That is one reason development machines are not log senders, and why keeping them out of production's stores by the machines themselves, not only by credentials, is an adopted idea |
 | Capacity | Spares and a replacement plan for the hardware | declined: the hardware is a prototype the owner replaces when funded, and may not replace like for like; what it cannot do meanwhile is listed, and any server is rebuilt from declarations onto whatever machine is next ([Disaster recovery](../disaster-recovery/README.md)) |
-| Other | Treating what agents read (mail, web, tenant pages) as untrusted input | consider |
+| Other | Treating what agents read (mail, web, tenant pages) as untrusted input | adopt |
 | Security | A default-deny host firewall (nftables) on the servers behind the routers | declined: the routers forward three ports, and bind addresses declared per socket and checked daily do the separating without a second list of ports ([why](../segmentation/README.md)); the machines with public addresses keep theirs |
 | Security | A cluster of hardware security modules | declined: a single token covers the need at this size |
 | Reliability | Full high availability for every service | declined: a standby for the few single points covers it |
