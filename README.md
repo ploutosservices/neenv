@@ -96,6 +96,8 @@ How one layer is built well, with drills you can run yourself:
   authenticated, and an alert when one cannot.
 - [Capacity](patterns/capacity/README.md). A week's notice of a full disk, and each drive's own verdict on its
   health and wear.
+- [A runbook per alert](patterns/alert-runbooks/README.md). Every alert says what a person does first, and a
+  check refuses one that does not.
 - [Walk-through](patterns/walk-through/README.md). One new tenant, from a domain name to a signed-in page.
 - [The practice](patterns/the-practice/README.md). The written rules that let agents build and run it.
 

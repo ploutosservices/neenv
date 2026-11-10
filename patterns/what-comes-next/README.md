@@ -48,7 +48,6 @@ pattern with a drill; *consider* means it is open; *declined* means it is not do
 | Security | A hardware token for the CA keys | declined by the owner's ruling: no offline root and no separate custody to remember; the root key is an item in the password manager, written back only to mint an intermediate and removed again ([Disaster recovery](../disaster-recovery/README.md)) |
 | Reliability | A standby for the CA and the door | adopt (the door has a cold standby abroad; the CA has none) |
 | Reliability | Restoring one tenant without the others | adopt: there are tenants outside the family |
-| Operations | A runbook per alert | adopt: every alert already carries its next step in its description; the pattern makes that a rule a check enforces |
 | Operations | Service objectives (SLOs) | declined: one decider, no contracts that promise an availability figure; the alerts say what is broken and what to do |
 | Delivery | Rollback without losing data; expand-then-contract migrations | declined from neenv: how an application changes its own schema is each application owner's practice, not the foundation's |
 | Information | Masking data copied to staging | declined by the owner's ruling: developers work against current production data, the outside tenants' included. The cost is stated, not hidden: a development machine holds real tenant data. That is one reason development machines are not log senders, and why keeping them out of production's stores by the machines themselves, not only by credentials, is an adopted idea |
