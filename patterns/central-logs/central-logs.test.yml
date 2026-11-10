@@ -1,0 +1,84 @@
+# promtool test rules central-logs.test.yml: the central-logs rules driven red and quiet. Run by drill-central-logs.sh rules.
+rule_files:
+  - central-logs.yml
+
+evaluation_interval: 5m
+
+tests:
+  # a and b answer their scrapes; the store heard a throughout and b only for the first 10 minutes. c is down
+  # (InstanceDown's). The dev box is job dev_nodes and never judged.
+  - interval: 5m
+    input_series:
+      - series: 'up{instance="a",job="nodes"}'
+        values: '1x20'
+      - series: 'up{instance="b",job="nodes"}'
+        values: '1x20'
+      - series: 'up{instance="c",job="nodes"}'
+        values: '0x20'
+      - series: 'up{instance="devbox",job="dev_nodes"}'
+        values: '1x20'
+      - series: 'central_logs_recent{host="a",instance="receiver",job="nodes"}'
+        values: '1x20'
+      - series: 'central_logs_recent{host="b",instance="receiver",job="nodes"}'
+        values: '1 1 1'
+      - series: 'central_logs_read_ok{instance="receiver",job="nodes"}'
+        values: '1x20'
+      - series: 'node_textfile_mtime_seconds{file="/var/lib/prometheus/node_exporter/central-logs.prom",instance="receiver",job="nodes"}'
+        values: '0+300x20'
+    alert_rule_test:
+      - eval_time: 30m
+        alertname: CentralLogsSenderQuiet
+        exp_alerts: []
+      - eval_time: 50m
+        alertname: CentralLogsSenderQuiet
+        exp_alerts:
+          - exp_labels: {severity: warning, owner: platform, instance: b, job: nodes}
+            exp_annotations:
+              summary: "b: its journal has not reached the central store for 30 minutes"
+              description: >-
+                systemd-journal-upload on b is not delivering. Read
+                `journalctl -u systemd-journal-upload` there; a 403 means its certificate is not a log sender's.
+      - eval_time: 50m
+        alertname: CentralLogsUnread
+        exp_alerts: []
+
+  # the receiver's facts stop arriving at minute 0.
+  - interval: 5m
+    input_series:
+      - series: 'up{instance="receiver",job="nodes"}'
+        values: '1x20'
+    alert_rule_test:
+      - eval_time: 25m
+        alertname: CentralLogsUnread
+        exp_alerts: []
+      - eval_time: 35m
+        alertname: CentralLogsUnread
+        exp_alerts:
+          - exp_labels: {severity: warning, owner: platform}
+            exp_annotations:
+              summary: "The central log store has not been read for 30 minutes"
+              description: >-
+                central-logs-facts.timer on the receiver did not report for 15 minutes, or journalctl could not read the
+                store. Without it CentralLogsSenderQuiet cannot see.
+
+  # the timer stops at minute 0: node_exporter still serves the last file (read_ok 1, the same senders), and only the
+  # file's age shows it. Hourly-ish evaluation every 5 minutes: older than 15 minutes from 20m, firing 30m later.
+  - interval: 5m
+    input_series:
+      - series: 'central_logs_read_ok{instance="receiver",job="nodes"}'
+        values: '1x20'
+      - series: 'node_textfile_mtime_seconds{file="/var/lib/prometheus/node_exporter/central-logs.prom",instance="receiver",job="nodes"}'
+        values: '0x20'
+    alert_rule_test:
+      - eval_time: 40m
+        alertname: CentralLogsUnread
+        exp_alerts: []
+      - eval_time: 50m
+        alertname: CentralLogsUnread
+        exp_alerts:
+          - exp_labels: {severity: warning, owner: platform}
+            exp_annotations:
+              summary: "The central log store has not been read for 30 minutes"
+              description: >-
+                central-logs-facts.timer on the receiver did not report for 15 minutes, or journalctl could not read the
+                store. Without it CentralLogsSenderQuiet cannot see.

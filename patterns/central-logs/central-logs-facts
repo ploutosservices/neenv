@@ -1,0 +1,32 @@
+#!/usr/bin/python3 -I
+# Which senders the central store heard from in the last 15 minutes, and how big the store is, as node_exporter textfile
+# facts (neenv patterns/central-logs). Run every 5 minutes by a timer: central-logs-facts <store dir> <out .prom>.
+import json, os, subprocess, sys, tempfile
+
+store, out = sys.argv[1], sys.argv[2]
+seen = set()
+p = subprocess.run(["journalctl", "-D", store, "--since", "-15min", "-o", "json", "--output-fields=_HOSTNAME", "--no-pager"],
+                   capture_output=True, text=True)
+ok = p.returncode == 0
+for line in p.stdout.splitlines():
+    try:
+        h = json.loads(line).get("_HOSTNAME")
+    except ValueError:
+        continue
+    # a field journald could not store as text is exported as a list of bytes, not a string
+    if isinstance(h, list):
+        h = bytes(h).decode("utf-8", "replace")
+    if isinstance(h, str) and h:
+        seen.add(h.split(".")[0])   # the short name, as the node exporters' `instance` label carries it here
+size = sum(os.path.getsize(os.path.join(d, f)) for d, _, fs in os.walk(store) for f in fs)
+lines = ["# HELP central_logs_read_ok 1 when the store could be read.", "# TYPE central_logs_read_ok gauge",
+         f"central_logs_read_ok {1 if ok else 0}",
+         "# HELP central_logs_recent 1 for each sender heard from in the last 15 minutes.", "# TYPE central_logs_recent gauge"]
+lines += [f'central_logs_recent{{host="{h}"}} 1' for h in sorted(seen)]
+lines += ["# HELP central_logs_store_bytes Bytes in the central store.", "# TYPE central_logs_store_bytes gauge",
+          f"central_logs_store_bytes {size}"]
+fd, tmp = tempfile.mkstemp(dir=os.path.dirname(out))
+with os.fdopen(fd, "w") as f:
+    f.write("\n".join(lines) + "\n")
+os.chmod(tmp, 0o644)
+os.replace(tmp, out)

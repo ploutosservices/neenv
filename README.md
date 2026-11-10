@@ -82,6 +82,8 @@ How one layer is built well, with drills you can run yourself:
   and identity, the auditor walled off.
 - [Patching](patterns/patching/README.md). Security fixes go in by themselves every night; the full upgrade and
   the reboot once a month, one machine at a time; an alert when either one is stuck.
+- [Central logs](patterns/central-logs/README.md). Every server's journal copied, as it is written, to one store
+  the sender can add to and never change, through a door that admits only log senders.
 - [Walk-through](patterns/walk-through/README.md). One new tenant, from a domain name to a signed-in page.
 - [The practice](patterns/the-practice/README.md). The written rules that let agents build and run it.
 

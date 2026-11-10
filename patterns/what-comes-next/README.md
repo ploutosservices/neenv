@@ -4,7 +4,7 @@ Every idea neenv has considered and not yet written up is listed here, with wher
 it moves to its own page and leaves this list. When one is declined, it stays here with the reason.
 
 **The order of work, as the owner decided it:** first patching ([written](../patching/README.md); scanning
-application dependencies is open there), central logs, host firewalls, disaster recovery
+application dependencies is open there), central logs ([written](../central-logs/README.md)), host firewalls, disaster recovery
 with succession, and a second factor for privileged people; then the rest. The guide counts as proven when someone
 who wrote none of it rebuilds a working copy from it alone.
 
@@ -37,7 +37,6 @@ pattern with a drill; *consider* means it is open; *declined* means it is not do
 
 | Area | Idea | Verdict |
 |---|---|---|
-| Operations | Central, append-only logs (Loki with Alloy, or remote journald) | adopt, second |
 | Security | Host firewalls and segmentation (nftables default-deny, WireGuard AllowedIPs); the development machine blocked from production | adopt, third |
 | Reliability | Disaster recovery: recovery targets, the rebuild order from nothing, where the backup password is kept; succession and break-glass when the one decider is unavailable | adopt, fourth |
 | Security | A second factor for privileged people (passkeys on the password manager and the door's admin) | adopt, fifth |

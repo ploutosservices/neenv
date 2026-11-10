@@ -1,0 +1,39 @@
+# Prometheus alert rules for central logs (neenv patterns/central-logs). Every server sends its journal to one
+# receiver; these judge the sender that went quiet and the receiver that stopped looking. The facts are the receiver's
+# own (central-logs-facts, every 5 minutes, through node_exporter's textfile directory).
+groups:
+  - name: central-logs
+    rules:
+      # A server that answers its scrape but was not heard by the store in 15 minutes, for 30. Every server writes to
+      # its journal at least every 15 minutes (any timer that runs that often, and systemd logs each run).
+      # up{job="nodes"}: the scrape job of the servers that send. Name yours.
+      - alert: CentralLogsSenderQuiet
+        expr: >-
+          up{job="nodes"} == 1
+          unless on (instance) label_replace(central_logs_recent, "instance", "$1", "host", "(.*)")
+        for: 30m
+        labels:
+          severity: warning
+          owner: platform
+        annotations:
+          summary: "{{ $labels.instance }}: its journal has not reached the central store for 30 minutes"
+          description: >-
+            systemd-journal-upload on {{ $labels.instance }} is not delivering. Read
+            `journalctl -u systemd-journal-upload` there; a 403 means its certificate is not a log sender's.
+
+      # Three ways to stop seeing: the store could not be read, the facts were never written, or the timer stopped and
+      # node_exporter keeps serving the last file (every number in it then looks current) — judged by the file's age.
+      - alert: CentralLogsUnread
+        expr: >-
+          max(central_logs_read_ok) == 0
+          or absent(central_logs_read_ok)
+          or time() - max(node_textfile_mtime_seconds{file=~".*/central-logs\\.prom"}) > 900
+        for: 30m
+        labels:
+          severity: warning
+          owner: platform
+        annotations:
+          summary: "The central log store has not been read for 30 minutes"
+          description: >-
+            central-logs-facts.timer on the receiver did not report for 15 minutes, or journalctl could not read the
+            store. Without it CentralLogsSenderQuiet cannot see.
