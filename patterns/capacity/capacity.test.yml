@@ -1,0 +1,137 @@
+# promtool test rules capacity.test.yml: the capacity rules driven red, and quiet beside it. Run by drill-capacity.sh.
+rule_files:
+  - capacity.yml
+
+evaluation_interval: 5m
+
+tests:
+  # a: 100 GB disk, 25 GB free, losing 1 GB an hour (empty in about a day). b: 25 GB free, steady.
+  # c: 80 GB free (only 20% used), losing 1 GB an hour: the trend is there, the disk is not past 70%, no page.
+  # s: 25 GB free losing 0.2 GB an hour: empty in about five days, inside the week, so it pages too.
+  - interval: 5m
+    input_series:
+      - series: 'node_filesystem_avail_bytes{instance="a",mountpoint="/",fstype="ext4",job="nodes"}'
+        values: '25e9-83333333x240'
+      - series: 'node_filesystem_size_bytes{instance="a",mountpoint="/",fstype="ext4",job="nodes"}'
+        values: '100e9x240'
+      - series: 'node_filesystem_avail_bytes{instance="b",mountpoint="/",fstype="ext4",job="nodes"}'
+        values: '25e9x240'
+      - series: 'node_filesystem_size_bytes{instance="b",mountpoint="/",fstype="ext4",job="nodes"}'
+        values: '100e9x240'
+      - series: 'node_filesystem_avail_bytes{instance="s",mountpoint="/",fstype="ext4",job="nodes"}'
+        values: '25e9-16666666x240'
+      - series: 'node_filesystem_size_bytes{instance="s",mountpoint="/",fstype="ext4",job="nodes"}'
+        values: '100e9x240'
+      - series: 'node_filesystem_avail_bytes{instance="c",mountpoint="/",fstype="ext4",job="nodes"}'
+        values: '80e9-83333333x240'
+      - series: 'node_filesystem_size_bytes{instance="c",mountpoint="/",fstype="ext4",job="nodes"}'
+        values: '100e9x240'
+    alert_rule_test:
+      - eval_time: 4h
+        alertname: DiskWillFillIn7Days
+        exp_alerts: []
+      - eval_time: 8h
+        alertname: DiskWillFillIn7Days
+        exp_alerts:
+          - exp_labels: {severity: warning, owner: platform, instance: a, mountpoint: /, fstype: ext4, job: nodes}
+            exp_annotations:
+              summary: "a /: full within a week at the last three days' rate"
+              description: >-
+                / on a is past 70% and its free space, projected from the last
+                three days, reaches zero within seven. Find what grows (`du -xh --max-depth=2 /`).
+          - exp_labels: {severity: warning, owner: platform, instance: s, mountpoint: /, fstype: ext4, job: nodes}
+            exp_annotations:
+              summary: "s /: full within a week at the last three days' rate"
+              description: >-
+                / on s is past 70% and its free space, projected from the last
+                three days, reaches zero within seven. Find what grows (`du -xh --max-depth=2 /`).
+
+  # a real drive fails its check; a virtual disk that offers no SMART reads healthy 0 and must not page.
+  - interval: 5m
+    input_series:
+      - series: 'smartmon_device_smart_healthy{instance="a",disk="/dev/sda",type="sat",job="nodes"}'
+        values: '0x6'
+      - series: 'smartmon_device_smart_available{instance="a",disk="/dev/sda",type="sat",job="nodes"}'
+        values: '1x6'
+      - series: 'smartmon_device_smart_healthy{instance="v",disk="/dev/sda",type="sat",job="nodes"}'
+        values: '0x6'
+      - series: 'smartmon_device_smart_available{instance="v",disk="/dev/sda",type="sat",job="nodes"}'
+        values: '0x6'
+      - series: 'nvme_critical_warning{instance="n",device="nvme0n1",job="nodes"}'
+        values: '0 4x5'
+      - series: 'nvme_percentage_used_ratio{instance="n",device="nvme0n1",job="nodes"}'
+        values: '0.85x30'
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: DriveSmartUnhealthy
+        exp_alerts:
+          - exp_labels: {severity: critical, owner: platform, instance: a, disk: /dev/sda, type: sat, job: nodes}
+            exp_annotations:
+              summary: "a /dev/sda: SMART says the drive is failing"
+              description: >-
+                The drive's own health check fails. Copy what matters off it, and read `smartctl -a /dev/sda`.
+      - eval_time: 25m
+        alertname: NvmeCriticalWarning
+        exp_alerts:
+          - exp_labels: {severity: critical, owner: platform, instance: n, device: nvme0n1, job: nodes}
+            exp_annotations:
+              summary: "n nvme0n1: the NVMe drive raised a critical warning (4)"
+              description: >-
+                A bit field: spare space low, temperature, reliability degraded, read-only, or volatile backup failed.
+                Read `nvme smart-log /dev/nvme0n1`.
+      - eval_time: 30m
+        alertname: NvmeWearHigh
+        exp_alerts: []
+
+  - interval: 5m
+    input_series:
+      - series: 'nvme_percentage_used_ratio{instance="n",device="nvme0n1",job="nodes"}'
+        values: '0.85x30'
+      - series: 'node_textfile_mtime_seconds{file="/var/lib/prometheus/node-exporter/smartmon.prom",instance="s",job="nodes"}'
+        values: '0x70'
+      - series: 'node_textfile_mtime_seconds{file="/var/lib/prometheus/node-exporter/smartmon.prom",instance="t",job="nodes"}'
+        values: '-300+300x70'
+    alert_rule_test:
+      - eval_time: 2h
+        alertname: NvmeWearHigh
+        exp_alerts:
+          - exp_labels: {severity: warning, owner: platform, instance: n, device: nvme0n1, job: nodes}
+            exp_annotations:
+              summary: "n nvme0n1: 85% of its rated endurance used"
+              description: >-
+                Plan its replacement; at 100% the drive is past its warranted writes, not dead, but no longer promised.
+      - eval_time: 3h
+        alertname: DriveFactsStale
+        exp_alerts: []
+      - eval_time: 5h
+        alertname: DriveFactsStale
+        exp_alerts:
+          - exp_labels: {severity: warning, owner: platform, instance: s, file: /var/lib/prometheus/node-exporter/smartmon.prom}
+            exp_annotations:
+              summary: "s: /var/lib/prometheus/node-exporter/smartmon.prom is 5h 0m 0s old"
+              description: >-
+                Its timer writes every 15 minutes and has not, so the drive health served is old. Check
+                `systemctl status prometheus-node-exporter-smartmon.timer` (or -nvme) on s.
+
+  # m answers its scrape and has no smartmon.prom at all; k has one.
+  - interval: 5m
+    input_series:
+      - series: 'up{instance="m",job="nodes"}'
+        values: '1x40'
+      - series: 'up{instance="k",job="nodes"}'
+        values: '1x40'
+      - series: 'node_textfile_mtime_seconds{file="/var/lib/prometheus/node-exporter/smartmon.prom",instance="k",job="nodes"}'
+        values: '0+300x40'
+    alert_rule_test:
+      - eval_time: 1h
+        alertname: DriveFactsMissing
+        exp_alerts: []
+      - eval_time: 3h
+        alertname: DriveFactsMissing
+        exp_alerts:
+          - exp_labels: {severity: warning, owner: platform, instance: m, job: nodes}
+            exp_annotations:
+              summary: "m: no drive facts at all"
+              description: >-
+                node_exporter on m serves no smartmon.prom: the timer never ran, or smartmontools is
+                not installed. Check `systemctl status prometheus-node-exporter-smartmon.timer`.

@@ -94,6 +94,8 @@ How one layer is built well, with drills you can run yourself:
   the second factor at the door; where a second factor is not yet checked, said plainly.
 - [Time](patterns/time/README.md). Every machine keeps the same clock from several agreeing sources, one
   authenticated, and an alert when one cannot.
+- [Capacity](patterns/capacity/README.md). A week's notice of a full disk, and each drive's own verdict on its
+  health and wear.
 - [Walk-through](patterns/walk-through/README.md). One new tenant, from a domain name to a signed-in page.
 - [The practice](patterns/the-practice/README.md). The written rules that let agents build and run it.
 

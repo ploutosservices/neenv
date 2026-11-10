@@ -138,9 +138,10 @@ ARM: exactly the binding check failed when any person's certificate was enough, 
 - **The identity providers' own second factor is not checked.** The door trusts a Google, Microsoft or GitHub sign-in.
   Whether each administrator's provider account requires a second factor is that provider's setting, and nothing
   here reads it. The machine certificate is what the door adds on top.
-- **A router's people's logins are a password.** On one router a key-only login exists for the nightly configuration
-  backup; the logins people use are password only. The next step is an SSH key for each person's login and the
-  password login turned off, which is the owner's change to make, since it is his login.
+- **A router's people's logins are a password,** because the router's graphical management tool (MikroTik's WinBox)
+  signs in only with a password; it has no key and no second factor. The command line accepts SSH keys, and the
+  nightly configuration backup uses a key-only login. Limiting WinBox to the private network is what stands in for a
+  second factor there.
 - **A lost machine.** Its certificate is revoked as [The root of trust](../root-of-trust/README.md) describes, and its
   private-network peer removed from the routers. The revocation list is published but the door does not yet check
   it, so until a lost certificate expires it is still accepted.

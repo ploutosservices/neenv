@@ -42,7 +42,6 @@ pattern with a drill; *consider* means it is open; *declined* means it is not do
 | Security | The development machine blocked from production by the machines, not only by credentials | adopt |
 | Operations | A one-page incident runbook | adopt |
 | Delivery | Build once and promote the same artefact (a version or digest) | adopt |
-| Capacity | Disk and growth forecasts, drive health alerts | adopt |
 | Information | Retention, deletion and a tenant's departure | adopt, once a tenant outside the family exists |
 | Security | Per-agent sandboxes beyond the production block | consider |
 | Security | Secret rotation on a schedule (OpenBao leases, dynamic database credentials) | declined: the owner rotates after a leak, all at once on one day, not on a calendar; scheduled rotation broke more than it protected here. Where secrets live and who reads them is in [The root of trust](../root-of-trust/README.md) |
