@@ -23,7 +23,13 @@ def main(paths):
         except (OSError, yaml.YAMLError) as exc:
             print(f"cannot read {path}: {exc}", file=sys.stderr)
             return 2
+        if doc is not None and not isinstance(doc, dict):
+            print(f"{path}: not a rules file (top level is not a mapping)", file=sys.stderr)
+            return 2
         for group in (doc or {}).get("groups") or []:
+            if not isinstance(group, dict):
+                print(f"{path}: a group that is not a mapping", file=sys.stderr)
+                return 2
             for rule in group.get("rules") or []:
                 if "alert" not in rule:
                     continue

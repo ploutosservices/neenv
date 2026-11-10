@@ -30,7 +30,7 @@ groups:
         expr: up == 0
         annotations:
           summary: "{{ $labels.instance }} is down"
-          description: "{{ $labels.instance }} has not answered its scrape for 2 minutes."
+          description: "{{ $labels.instance }} has not answered its scrape."
           action: "Reach the machine another way (its console, its other address); if it answers, read its network."
       - alert: BackupStale
         expr: time() - backup_last_success_timestamp_seconds > 172800

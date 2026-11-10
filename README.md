@@ -98,6 +98,8 @@ How one layer is built well, with drills you can run yourself:
   health and wear.
 - [A runbook per alert](patterns/alert-runbooks/README.md). Every alert says what a person does first, and a
   check refuses one that does not.
+- [Incidents](patterns/incidents/README.md). One page: notice, contain, record, restore, review, and the verb for
+  each kind of compromise: a lost device, a leaked token, an agent, the root of trust.
 - [Walk-through](patterns/walk-through/README.md). One new tenant, from a domain name to a signed-in page.
 - [The practice](patterns/the-practice/README.md). The written rules that let agents build and run it.
 

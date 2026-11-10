@@ -27,7 +27,6 @@ who wrote none of it rebuilds a working copy from it alone.
 | Backups and restores | Each store copied off site nightly, a restore proved on a schedule, restoring one tenant, recovery targets, losing a whole site |
 | Moving a store of record | An application's database moved to another engine with no replica: one recorded state (old, draining, drained, new); the drain closes writes at the one connection point and compares every row; a service boots on the new store only once drained; rollback without a restore only until the first write on the new store; the old store's binlog, not a table checksum, proves it was left untouched. Built and rehearsed twice by one application |
 | Watching and logs | Checks, alerts and the audit log; what logs keep of tenant data, and for how long; per-tenant limits |
-| Incidents | What happens when a root, a device, a token or an agent is compromised, end to end |
 | Checks, not trust | An agent's work is caught where it lands: the push refuses a commit with no reason, a check refuses what does not match |
 | What it costs | The yearly total by kind: hardware, services, subscriptions |
 
@@ -40,7 +39,6 @@ pattern with a drill; *consider* means it is open; *declined* means it is not do
 | Area | Idea | Verdict |
 |---|---|---|
 | Security | The development machine blocked from production by the machines, not only by credentials | adopt |
-| Operations | A one-page incident runbook | adopt |
 | Delivery | Build once and promote the same artefact (a version or digest) | adopt |
 | Information | Retention, deletion and a tenant's departure | adopt: there are tenants outside the family |
 | Security | Per-agent sandboxes beyond the production block | declined: each agent is already its own operating-system user with its own work tree and identity ([The dev box](../dev-box/README.md)) |

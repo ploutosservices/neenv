@@ -21,9 +21,9 @@ template) ends with "**First:** …" while the alert fires, and drops it when it
 
 **A check refuses an alert without one.** The configuration repository's CI runs
 [`check-alert-actions.py`](check-alert-actions.py) over every rule file: an alerting rule missing `summary`,
-`description` or `action` fails the push. So a new alert cannot be added without saying what to do about it, and the
+`description` or `action` turns the configuration's CI run red. So a new alert cannot be added without saying what to do about it, and the
 runbook cannot drift away from the alert, because it is the alert. When this pattern was written, all 50 alerts here
-were given an action; the check then passed, and it has guarded every change since.
+were given an action, the check passed, and every change to the rules is checked from then on.
 
 **What makes a good action.** It names the first command or the first place to look, on the machine the alert names:
 `du -xh --max-depth=2 <mountpoint> | sort -h | tail` for a filling disk, `systemctl status <unit>` and
@@ -31,7 +31,8 @@ were given an action; the check then passed, and it has guarded every change sin
 explain the alert (that is the description) and does not try to be the whole procedure; a long procedure belongs in
 the pattern for that part of the system, and the action points there.
 
-**Alertmanager's template**, the line that shows it (Go templates):
+**Alertmanager's template**, the line that shows it (Go templates, inside the template's `{{ range .Alerts }}`, where
+each alert's `.Status` is `firing` or `resolved`):
 
 ```
 {{ with .Annotations.description }} — {{ . }}{{ end }}{{ if ne .Status "resolved" }}{{ with .Annotations.action }} **First:** {{ . }}{{ end }}{{ end }}
@@ -51,7 +52,7 @@ expects an alert must expect its action too. That is a feature: a changed action
   annotations:
     summary: "{{ $labels.instance }}: disk {{ $labels.mountpoint }} over 80%"
     description: "Disk usage is above 80% on {{ $labels.instance }} ({{ $labels.mountpoint }})."
-    action: "Run `du -xh --max-depth=2 <mountpoint> | sort -h | tail` and remove or move what grew; never delete a backup to make room."
+    action: "Run `du -xh --max-depth=2 {{ $labels.mountpoint }} | sort -h | tail` on {{ $labels.instance }} and remove or move what grew; never delete a backup to make room."
 ```
 
 In CI, after `promtool check rules` and `promtool test rules`:
