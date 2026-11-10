@@ -100,6 +100,9 @@ How one layer is built well, with drills you can run yourself:
   check refuses one that does not.
 - [Incidents](patterns/incidents/README.md). One page: notice, contain, record, restore, review, and the verb for
   each kind of compromise: a lost device, a leaked token, an agent, the root of trust.
+- [What agents read](patterns/untrusted-input/README.md). A message is believed only after its sender is proved;
+  a refused body is never shown; a shown body sits inside a fence it cannot close; and nothing an agent reads can
+  authorise work.
 - [Walk-through](patterns/walk-through/README.md). One new tenant, from a domain name to a signed-in page.
 - [The practice](patterns/the-practice/README.md). The written rules that let agents build and run it.
 
@@ -113,10 +116,11 @@ Every drill answers the same way, so a script can run them all:
 | 1 | a check failed | the arm did not break what it should, or broke something else: the drill cannot tell |
 | 2 | it could not run: a missing tool, an unknown arm, a setup step that failed | the same |
 
-An arm run that exits 0 is the proof that each check can fail. A check that never fails proves nothing. Three drills
+An arm run that exits 0 is the proof that each check can fail. A check that never fails proves nothing. Some drills
 carry their arms inside one command instead: `drill-environments.sh selftest`, the practice's
-`drill-done.sh selftest` and `drill-patching.sh rules` run one passing case and several broken ones, and exit 0
-only when each comes out as it must.
+`drill-done.sh selftest`, the `rules` mode of the patching, central-logs and time drills, `drill-capacity.sh`, and
+`drill-untrusted-input.sh gate` run one passing case and several broken ones, and exit 0 only when each comes out
+as it must.
 
 ## Licence
 
