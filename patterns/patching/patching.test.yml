@@ -1,0 +1,134 @@
+# promtool test rules patching.test.yml: the patching rules driven red the way apt.prom's numbers go red, and
+# quiet when they do not. Run by drill-patching.sh rules.
+rule_files:
+  - patching.yml
+
+evaluation_interval: 1h
+
+tests:
+  # a: a security update arrives and is never taken; b: one arrives and the nightly run takes it the next hour;
+  # c: a Docker-origin update stays pending (not security, never judged).
+  - interval: 1h
+    input_series:
+      - series: 'apt_upgrades_pending{arch="amd64",instance="a",job="nodes",origin="Debian:trixie-security/stable-security"}'
+        values: '1x80'
+      - series: 'apt_upgrades_pending{arch="amd64",instance="b",job="nodes",origin="Debian:trixie-security/stable-security"}'
+        values: '1 0x79'
+      - series: 'apt_upgrades_pending{arch="amd64",instance="c",job="nodes",origin="Docker:/trixie"}'
+        values: '4x80'
+    alert_rule_test:
+      - eval_time: 71h
+        alertname: SecurityUpdatesUnapplied
+        exp_alerts: []
+      - eval_time: 73h
+        alertname: SecurityUpdatesUnapplied
+        exp_alerts:
+          - exp_labels: {severity: warning, owner: infra, instance: a}
+            exp_annotations:
+              summary: "a: 1 security update(s) pending for 3 days"
+              description: >-
+                unattended-upgrades runs nightly and takes security origins only, so a security update pending
+                for three days did not go in. Read /var/log/unattended-upgrades/unattended-upgrades.log on
+                a and `unattended-upgrade --dry-run -d`.
+
+  # a: up 38 days and needs a reboot (missed its monthly slot); b: needs one, rebooted at day 20, up 18 days;
+  # c: up 38 days, needs none.
+  - interval: 1h
+    input_series:
+      - series: 'node_reboot_required{instance="a",job="nodes"}'
+        values: '1x950'
+      - series: 'node_boot_time_seconds{instance="a",job="nodes"}'
+        values: '0x950'
+      - series: 'node_reboot_required{instance="b",job="nodes"}'
+        values: '1x950'
+      - series: 'node_boot_time_seconds{instance="b",job="nodes"}'
+        values: '0x479 1728000x470'
+      - series: 'node_reboot_required{instance="c",job="nodes"}'
+        values: '0x950'
+      - series: 'node_boot_time_seconds{instance="c",job="nodes"}'
+        values: '0x950'
+    alert_rule_test:
+      - eval_time: 864h
+        alertname: RebootPending
+        exp_alerts: []
+      - eval_time: 912h
+        alertname: RebootPending
+        exp_alerts:
+          - exp_labels: {severity: warning, owner: infra, instance: a}
+            exp_annotations:
+              summary: "a: needs a reboot and has been up more than 37 days"
+              description: >-
+                An installed update is not running, and the box has been up longer than two monthly patch slots
+                apart, so its slot did not reboot it. Read that job's last run for a.
+
+  # the lists on a stop refreshing at hour 0 (epoch 0); b refreshes every hour. At hour 50 a's are 50 h old.
+  - interval: 1h
+    input_series:
+      - series: 'apt_package_cache_timestamp_seconds{instance="a",job="nodes"}'
+        values: '0x60'
+      - series: 'apt_package_cache_timestamp_seconds{instance="b",job="nodes"}'
+        values: '0+3600x60'
+    alert_rule_test:
+      - eval_time: 47h
+        alertname: AptListsStale
+        exp_alerts: []
+      - eval_time: 50h
+        alertname: AptListsStale
+        exp_alerts:
+          - exp_labels: {severity: warning, owner: infra, instance: a}
+            exp_annotations:
+              summary: "a: package lists 2d 2h 0m 0s old"
+              description: >-
+                The nightly update reads lists this old, so it cannot see a newer fix. Check
+                apt-daily.timer and `apt-get update` on a.
+
+  # a answers its scrape and carries no apt.prom (the defect this was built for); b carries it; c is down
+  # (InstanceDown's, not this one's).
+  - interval: 1h
+    input_series:
+      - series: 'up{instance="a",job="nodes"}'
+        values: '1x20'
+      - series: 'up{instance="b",job="nodes"}'
+        values: '1x20'
+      - series: 'up{instance="c",job="nodes"}'
+        values: '0x20'
+      - series: 'apt_package_cache_timestamp_seconds{instance="b",job="nodes"}'
+        values: '0+3600x20'
+    alert_rule_test:
+      - eval_time: 11h
+        alertname: PatchFactsMissing
+        exp_alerts: []
+      - eval_time: 13h
+        alertname: PatchFactsMissing
+        exp_alerts:
+          - exp_labels: {severity: warning, owner: infra, instance: a, job: nodes}
+            exp_annotations:
+              summary: "a: answers its scrape but reports no patch facts"
+              description: >-
+                node_exporter on a carries no apt.prom: the collectors' timer is not running,
+                or node_exporter does not read /var/lib/prometheus/node-exporter. Without the facts the other
+                patching alerts cannot fire.
+
+  # a's collectors' timer stops at hour 0 (the file's mtime freezes at epoch 0); b's writes every 15 minutes.
+  # Rules evaluate hourly here: true from 3h (pending), firing at 4h.
+  - interval: 15m
+    input_series:
+      - series: 'node_textfile_mtime_seconds{file="/var/lib/prometheus/node-exporter/apt.prom",instance="a",job="nodes"}'
+        values: '0x20'
+      - series: 'node_textfile_mtime_seconds{file="/var/lib/prometheus/node-exporter/apt.prom",instance="b",job="nodes"}'
+        values: '0+900x20'
+      - series: 'node_textfile_mtime_seconds{file="/var/lib/prometheus/node_exporter/other.prom",instance="c",job="nodes"}'
+        values: '0x20'
+    alert_rule_test:
+      - eval_time: 2h
+        alertname: PatchFactsStale
+        exp_alerts: []
+      - eval_time: 4h
+        alertname: PatchFactsStale
+        exp_alerts:
+          - exp_labels: {severity: warning, owner: infra, instance: a}
+            exp_annotations:
+              summary: "a: apt.prom last written 4h 0m 0s ago"
+              description: >-
+                prometheus-node-exporter-apt.timer on a writes every 15 minutes and has not.
+                The patch facts served are old. Check the timer and its service's journal.

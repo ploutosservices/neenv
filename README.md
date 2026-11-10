@@ -80,6 +80,8 @@ How one layer is built well, with drills you can run yourself:
   a check that fails on anything two of them share by accident.
 - [The dev box](patterns/dev-box/README.md). One person and several AI agents on one machine, each its own user
   and identity, the auditor walled off.
+- [Patching](patterns/patching/README.md). Security fixes go in by themselves every night; the full upgrade and
+  the reboot once a month, one machine at a time; an alert when either one is stuck.
 - [Walk-through](patterns/walk-through/README.md). One new tenant, from a domain name to a signed-in page.
 - [The practice](patterns/the-practice/README.md). The written rules that let agents build and run it.
 
@@ -93,10 +95,10 @@ Every drill answers the same way, so a script can run them all:
 | 1 | a check failed | the arm did not break what it should, or broke something else: the drill cannot tell |
 | 2 | it could not run: a missing tool, an unknown arm, a setup step that failed | the same |
 
-An arm run that exits 0 is the proof that each check can fail. A check that never fails proves nothing. Two drills
-carry their arms inside one command instead: `drill-environments.sh selftest` and the practice's
-`drill-done.sh selftest` run one passing case and several broken ones, and exit 0 only when each comes out as it
-must.
+An arm run that exits 0 is the proof that each check can fail. A check that never fails proves nothing. Three drills
+carry their arms inside one command instead: `drill-environments.sh selftest`, the practice's
+`drill-done.sh selftest` and `drill-patching.sh rules` run one passing case and several broken ones, and exit 0
+only when each comes out as it must.
 
 ## Licence
 

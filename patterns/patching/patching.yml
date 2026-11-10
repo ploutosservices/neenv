@@ -1,0 +1,77 @@
+# Prometheus alert rules for patching (neenv patterns/patching). Every machine installs its security updates
+# nightly (unattended-upgrades); these judge the update that did not go in and the reboot nobody made. The facts come
+# from Debian's prometheus-node-exporter-collectors (apt.prom), read through node_exporter's second textfile directory.
+groups:
+  - name: patching
+    rules:
+      - alert: SecurityUpdatesUnapplied
+        # A `for:` restarts if the series is missing for one evaluation (an exporter restart, a lost scrape), so 3 days
+        # can stretch; Prometheus itself keeps the pending state across its own restarts (ALERTS_FOR_STATE).
+        expr: max by (instance) (apt_upgrades_pending{origin=~"(?i).*security.*"}) > 0
+        for: 3d
+        labels:
+          severity: warning
+          owner: infra
+        annotations:
+          summary: "{{ $labels.instance }}: {{ $value | humanize }} security update(s) pending for 3 days"
+          description: >-
+            unattended-upgrades runs nightly and takes security origins only, so a security update pending
+            for three days did not go in. Read /var/log/unattended-upgrades/unattended-upgrades.log on
+            {{ $labels.instance }} and `unattended-upgrade --dry-run -d`.
+
+      # The reboot is the monthly patch job's (first Sunday, one machine per slot). First Sundays
+      # are 28 or 35 days apart, so a pending reboot is normal for up to 35 days; 37 leaves a slot room to run late.
+      # Judged from the boot time, not a month-long `for:`, which one missing evaluation would restart.
+      - alert: RebootPending
+        expr: >-
+          max by (instance) (node_reboot_required) == 1
+          and on (instance) (time() - max by (instance) (node_boot_time_seconds)) > 37 * 86400
+        for: 1h
+        labels:
+          severity: warning
+          owner: infra
+        annotations:
+          summary: "{{ $labels.instance }}: needs a reboot and has been up more than 37 days"
+          description: >-
+            An installed update is not running, and the box has been up longer than two monthly patch slots
+            apart, so its slot did not reboot it. Read that job's last run for {{ $labels.instance }}.
+
+      - alert: AptListsStale
+        expr: time() - max by (instance) (apt_package_cache_timestamp_seconds) > 2 * 86400
+        for: 1h
+        labels:
+          severity: warning
+          owner: infra
+        annotations:
+          summary: "{{ $labels.instance }}: package lists {{ $value | humanizeDuration }} old"
+          description: >-
+            The nightly update reads lists this old, so it cannot see a newer fix. Check
+            apt-daily.timer and `apt-get update` on {{ $labels.instance }}.
+
+      # The collectors' timer writes apt.prom every 15 minutes. If it stops, the last file is still served and
+      # every number in it looks current.
+      - alert: PatchFactsStale
+        expr: time() - max by (instance) (node_textfile_mtime_seconds{file=~".*/apt\\.prom"}) > 2 * 3600
+        for: 15m
+        labels:
+          severity: warning
+          owner: infra
+        annotations:
+          summary: "{{ $labels.instance }}: apt.prom last written {{ $value | humanizeDuration }} ago"
+          description: >-
+            prometheus-node-exporter-apt.timer on {{ $labels.instance }} writes every 15 minutes and has not.
+            The patch facts served are old. Check the timer and its service's journal.
+
+      # up{job=...}: the scrape jobs of your node exporters (here two: servers, and the development machines). Name yours.
+      - alert: PatchFactsMissing
+        expr: up{job=~"nodes|dev_nodes"} == 1 unless on (instance) apt_package_cache_timestamp_seconds
+        for: 12h
+        labels:
+          severity: warning
+          owner: infra
+        annotations:
+          summary: "{{ $labels.instance }}: answers its scrape but reports no patch facts"
+          description: >-
+            node_exporter on {{ $labels.instance }} carries no apt.prom: the collectors' timer is not running,
+            or node_exporter does not read /var/lib/prometheus/node-exporter. Without the facts the other
+            patching alerts cannot fire.
