@@ -1,0 +1,69 @@
+# promtool test rules time.test.yml: the time rules driven red and quiet. Run by drill-time.sh rules.
+rule_files:
+  - time.yml
+
+evaluation_interval: 5m
+
+tests:
+  # a loses its source at minute 0; b stays synchronised. c runs 200 ms ahead, e 200 ms behind; d stays at 1 ms.
+  - interval: 5m
+    input_series:
+      - series: 'node_timex_sync_status{instance="a",job="nodes"}'
+        values: '0x10'
+      - series: 'node_timex_sync_status{instance="b",job="nodes"}'
+        values: '1x10'
+      - series: 'chrony_tracking_system_offset_seconds{instance="c",job="nodes"}'
+        values: '0.2x10'
+      - series: 'chrony_tracking_system_offset_seconds{instance="e",job="nodes"}'
+        values: '-0.2x10'
+      - series: 'chrony_tracking_system_offset_seconds{instance="d",job="nodes"}'
+        values: '-0.001x10'
+    alert_rule_test:
+      - eval_time: 10m
+        alertname: ClockNotSynchronised
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: ClockNotSynchronised
+        exp_alerts:
+          - exp_labels: {severity: warning, owner: platform, instance: a}
+            exp_annotations:
+              summary: "a: the clock is not synchronised"
+              description: >-
+                The kernel's clock is marked unsynchronised (STA_UNSYNC) on a for 15 minutes.
+                Read `chronyc sources` there (or `timedatectl timesync-status` on a host that keeps timesyncd).
+      - eval_time: 20m
+        alertname: ClockOffset
+        exp_alerts:
+          - exp_labels: {severity: warning, owner: platform, instance: c}
+            exp_annotations:
+              summary: "c: the clock is 200ms off"
+              description: >-
+                More than 50 ms between c's clock and its sources for 15 minutes. Certificates
+                and tokens tolerate seconds, but logs from different machines stop lining up first.
+          - exp_labels: {severity: warning, owner: platform, instance: e}
+            exp_annotations:
+              summary: "e: the clock is 200ms off"
+              description: >-
+                More than 50 ms between e's clock and its sources for 15 minutes. Certificates
+                and tokens tolerate seconds, but logs from different machines stop lining up first.
+
+  # a's facts stop at minute 0 (chronyd died); b's are written every minute.
+  - interval: 1m
+    input_series:
+      - series: 'node_textfile_mtime_seconds{file="/var/lib/prometheus/node_exporter/chrony.prom",instance="a",job="nodes"}'
+        values: '0x30'
+      - series: 'node_textfile_mtime_seconds{file="/var/lib/prometheus/node_exporter/chrony.prom",instance="b",job="nodes"}'
+        values: '0+60x30'
+    alert_rule_test:
+      - eval_time: 10m
+        alertname: ChronyFactsStale
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: ChronyFactsStale
+        exp_alerts:
+          - exp_labels: {severity: warning, owner: platform, instance: a}
+            exp_annotations:
+              summary: "a: chrony has not reported for 20m 0s"
+              description: >-
+                chrony-facts.timer writes every minute and has not, so chronyd is down or not answering on
+                a. Read `systemctl status chrony` and `chronyc tracking` there.

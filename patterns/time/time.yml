@@ -1,0 +1,44 @@
+# Prometheus alert rules for time (neenv patterns/time). The kernel's sync flag, chrony's own offset, and whether
+# chrony is still reporting (a timer writes chrony.py's output to node_exporter's textfile directory every minute).
+groups:
+  - name: time
+    rules:
+      - alert: ClockNotSynchronised
+        expr: min by (instance) (node_timex_sync_status) == 0
+        for: 15m
+        labels:
+          severity: warning
+          owner: platform
+        annotations:
+          summary: "{{ $labels.instance }}: the clock is not synchronised"
+          description: >-
+            The kernel's clock is marked unsynchronised (STA_UNSYNC) on {{ $labels.instance }} for 15 minutes.
+            Read `chronyc sources` there (or `timedatectl timesync-status` on a host that keeps timesyncd).
+
+      # chrony's own offset (the chrony-facts timer). The kernel's node_timex_offset_seconds stays 0
+      # under chrony, which steers the clock without the kernel's PLL; judging it would never fire.
+      - alert: ClockOffset
+        expr: max by (instance) (abs(chrony_tracking_system_offset_seconds)) > 0.05
+        for: 15m
+        labels:
+          severity: warning
+          owner: platform
+        annotations:
+          summary: "{{ $labels.instance }}: the clock is {{ $value | humanizeDuration }} off"
+          description: >-
+            More than 50 ms between {{ $labels.instance }}'s clock and its sources for 15 minutes. Certificates
+            and tokens tolerate seconds, but logs from different machines stop lining up first.
+
+      # chronyd stopped, or lost the means to answer: the facts file stops being written (every minute), and the
+      # kernel's sync flag can stay set for hours after that.
+      - alert: ChronyFactsStale
+        expr: time() - max by (instance) (node_textfile_mtime_seconds{file=~".*/chrony\\.prom"}) > 600
+        for: 5m
+        labels:
+          severity: warning
+          owner: platform
+        annotations:
+          summary: "{{ $labels.instance }}: chrony has not reported for {{ $value | humanizeDuration }}"
+          description: >-
+            chrony-facts.timer writes every minute and has not, so chronyd is down or not answering on
+            {{ $labels.instance }}. Read `systemctl status chrony` and `chronyc tracking` there.

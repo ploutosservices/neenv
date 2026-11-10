@@ -92,6 +92,8 @@ How one layer is built well, with drills you can run yourself:
   estate comes back in.
 - [A second factor for privileged people](patterns/second-factor/README.md). An administrator's own machine is
   the second factor at the door; where a second factor is not yet checked, said plainly.
+- [Time](patterns/time/README.md). Every machine keeps the same clock from several agreeing sources, one
+  authenticated, and an alert when one cannot.
 - [Walk-through](patterns/walk-through/README.md). One new tenant, from a domain name to a signed-in page.
 - [The practice](patterns/the-practice/README.md). The written rules that let agents build and run it.
 
