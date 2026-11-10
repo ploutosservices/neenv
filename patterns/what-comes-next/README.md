@@ -6,7 +6,8 @@ it moves to its own page and leaves this list. When one is declined, it stays he
 **The order of work, as the owner decided it:** first patching ([written](../patching/README.md); scanning
 application dependencies is open there), central logs ([written](../central-logs/README.md)), host firewalls ([written](../segmentation/README.md): segmentation without them, and why a
 default-deny firewall on the servers at home was declined), disaster recovery
-with succession ([written](../disaster-recovery/README.md)), and a second factor for privileged people; then the rest. The guide counts as proven when someone
+with succession ([written](../disaster-recovery/README.md)), and a second factor for privileged people
+([written](../second-factor/README.md)); then the rest. The guide counts as proven when someone
 who wrote none of it rebuilds a working copy from it alone.
 
 ## Patterns still to write
@@ -39,7 +40,6 @@ pattern with a drill; *consider* means it is open; *declined* means it is not do
 | Area | Idea | Verdict |
 |---|---|---|
 | Security | The development machine blocked from production by the machines, not only by credentials | adopt |
-| Security | A second factor for privileged people (passkeys on the password manager and the door's admin) | adopt, fifth |
 | Operations | A one-page incident runbook | adopt |
 | Operations | Time synchronisation (chrony against several sources) | adopt |
 | Delivery | Build once and promote the same artefact (a version or digest) | adopt |
