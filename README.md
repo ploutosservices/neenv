@@ -84,6 +84,9 @@ How one layer is built well, with drills you can run yourself:
   the reboot once a month, one machine at a time; an alert when either one is stuck.
 - [Central logs](patterns/central-logs/README.md). Every server's journal copied, as it is written, to one store
   the sender can add to and never change, through a door that admits only log senders.
+- [Segmentation without host firewalls](patterns/segmentation/README.md). One door per site, bind addresses
+  declared per socket, the proxy's fence and the mesh's keys, and a daily check that the machines match; why a
+  default-deny firewall on the servers at home was declined.
 - [Walk-through](patterns/walk-through/README.md). One new tenant, from a domain name to a signed-in page.
 - [The practice](patterns/the-practice/README.md). The written rules that let agents build and run it.
 

@@ -4,7 +4,8 @@ Every idea neenv has considered and not yet written up is listed here, with wher
 it moves to its own page and leaves this list. When one is declined, it stays here with the reason.
 
 **The order of work, as the owner decided it:** first patching ([written](../patching/README.md); scanning
-application dependencies is open there), central logs ([written](../central-logs/README.md)), host firewalls, disaster recovery
+application dependencies is open there), central logs ([written](../central-logs/README.md)), host firewalls ([written](../segmentation/README.md): segmentation without them, and why a
+default-deny firewall on the servers at home was declined), disaster recovery
 with succession, and a second factor for privileged people; then the rest. The guide counts as proven when someone
 who wrote none of it rebuilds a working copy from it alone.
 
@@ -37,7 +38,7 @@ pattern with a drill; *consider* means it is open; *declined* means it is not do
 
 | Area | Idea | Verdict |
 |---|---|---|
-| Security | Host firewalls and segmentation (nftables default-deny, WireGuard AllowedIPs); the development machine blocked from production | adopt, third |
+| Security | The development machine blocked from production by the machines, not only by credentials | adopt |
 | Reliability | Disaster recovery: recovery targets, the rebuild order from nothing, where the backup password is kept; succession and break-glass when the one decider is unavailable | adopt, fourth |
 | Security | A second factor for privileged people (passkeys on the password manager and the door's admin) | adopt, fifth |
 | Operations | A one-page incident runbook | adopt |
@@ -55,6 +56,7 @@ pattern with a drill; *consider* means it is open; *declined* means it is not do
 | Information | Masking data copied to staging | consider |
 | Capacity | Spares and a replacement plan for the hardware | consider |
 | Other | Treating what agents read (mail, web, tenant pages) as untrusted input | consider |
+| Security | A default-deny host firewall (nftables) on the servers behind the routers | declined: the routers forward three ports, and bind addresses declared per socket and checked daily do the separating without a second list of ports ([why](../segmentation/README.md)); the machines with public addresses keep theirs |
 | Security | A cluster of hardware security modules | declined: a single token covers the need at this size |
 | Reliability | Full high availability for every service | declined: a standby for the few single points covers it |
 | Delivery | Signed builds and a bill of materials (cosign, SLSA) | declined: pinned dependencies and one promoted artefact give most of the value |
