@@ -186,9 +186,11 @@ packet rules with no socket behind it.
 - **rpcbind listens on every address** on a server that also sits on a device network. It is declared, so the
   daily check does not flag it; the declaration is what is too wide.
 - **UDP is not in our registry.** The drill checks it; the daily job here checks TCP only.
-- **The development machine can reach production's databases at the network level.** A production login refuses it
-  only for want of a password: the database's own access rules admit each service's login from any address. Limiting
-  each login to its consumers' addresses closes that without a firewall. It is not built.
+- **The development machine and production's databases.** PostgreSQL now refuses the development machines by
+  address, in a `reject` line above every login (`host all all <dev-box>/32 reject`; pg_hba is first-match), so a
+  production password on a development machine opens nothing. MariaDB has no such list: an account is admitted by its
+  own host pattern, and two production accounts here still match a development machine (one names it outright). Until
+  those patterns are narrowed, only their passwords keep it out.
 - **IPv6.** Several services bind `::` beside `0.0.0.0`. What reaches them from outside over IPv6 is decided by the
   routers' IPv6 filter, not by anything in this pattern, and the drill does not check it.
 - **The check is daily.** A socket opened by hand and closed before the job runs is never seen.

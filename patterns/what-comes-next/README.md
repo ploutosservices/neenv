@@ -38,7 +38,7 @@ pattern with a drill; *consider* means it is open; *declined* means it is not do
 
 | Area | Idea | Verdict |
 |---|---|---|
-| Security | The development machine blocked from production by the machines, not only by credentials | adopt |
+| Security | The development machine blocked from production by the machines, not only by credentials | adopt: PostgreSQL done ([Segmentation](../segmentation/README.md)); MariaDB's account host patterns are next |
 | Delivery | Build once and promote the same artefact (a version or digest) | adopt |
 | Information | Retention, deletion and a tenant's departure | adopt: there are tenants outside the family |
 | Security | Per-agent sandboxes beyond the production block | declined: each agent is already its own operating-system user with its own work tree and identity ([The dev box](../dev-box/README.md)) |
