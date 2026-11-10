@@ -87,6 +87,9 @@ How one layer is built well, with drills you can run yourself:
 - [Segmentation without host firewalls](patterns/segmentation/README.md). One door per site, bind addresses
   declared per socket, the proxy's fence and the mesh's keys, and a daily check that the machines match; why a
   default-deny firewall on the servers at home was declined.
+- [Disaster recovery, with succession](patterns/disaster-recovery/README.md). Two copies a night, one abroad and
+  append-only; a restore proved every day; the three secrets that must be carried, who takes over, and the order an
+  estate comes back in.
 - [Walk-through](patterns/walk-through/README.md). One new tenant, from a domain name to a signed-in page.
 - [The practice](patterns/the-practice/README.md). The written rules that let agents build and run it.
 
