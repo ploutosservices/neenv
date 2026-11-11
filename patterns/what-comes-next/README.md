@@ -44,7 +44,6 @@ pattern with a drill; *consider* means it is open; *declined* means it is not do
 | Security | Per-agent sandboxes beyond the production block | declined: each agent is already its own operating-system user with its own work tree and identity ([The dev box](../dev-box/README.md)) |
 | Security | Secret rotation on a schedule (OpenBao leases, dynamic database credentials) | declined: the owner rotates after a leak, all at once on one day, not on a calendar; scheduled rotation broke more than it protected here. Where secrets live and who reads them is in [The root of trust](../root-of-trust/README.md) |
 | Security | A hardware token for the CA keys | declined by the owner's ruling: no offline root and no separate custody to remember; the root key is an item in the password manager, written back only to mint an intermediate and removed again ([Disaster recovery](../disaster-recovery/README.md)) |
-| Reliability | A standby for the CA and the door | adopt (the door has a cold standby abroad; the CA has none) |
 | Reliability | Restoring one tenant without the others | adopt: there are tenants outside the family |
 | Operations | Service objectives (SLOs) | declined: one decider, no contracts that promise an availability figure; the alerts say what is broken and what to do |
 | Delivery | Rollback without losing data; expand-then-contract migrations | declined from neenv: how an application changes its own schema is each application owner's practice, not the foundation's |

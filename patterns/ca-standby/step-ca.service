@@ -1,0 +1,56 @@
+[Unit]
+# step-ca, as the CA and its standby both install it (the standby keeps it disabled and stopped).
+#
+# The Debian package ships ONLY the binary: no user, no unit, no configuration. (Smallstep's
+# own documentation says otherwise; it is wrong for the 0.30.x debs, measured 2026-08-08.)
+# So this unit and the `step` user are configuration management's, on both machines.
+Description=step-ca — the private certificate authority
+Documentation=https://smallstep.com/docs/step-ca
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=30
+StartLimitBurst=3
+# Refuse to start rather than start empty: without this, a lost config silently becomes a CA
+# that answers nothing while systemd reports the unit as running.
+ConditionFileNotEmpty=/etc/step-ca/config/ca.json
+
+[Service]
+Type=simple
+User=step
+Group=step
+Environment=STEPPATH=/etc/step-ca
+WorkingDirectory=/etc/step-ca
+ExecStart=/usr/bin/step-ca config/ca.json --password-file /etc/step-ca/password.txt
+ExecReload=/bin/kill --signal HUP $MAINPID
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=30
+
+# This process holds the signing key in memory, which is unavoidable for ANY certificate authority. The sandbox below is not decoration: it
+# is the whole difference between "a process on this box" and "the process that can sign".
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+CapabilityBoundingSet=CAP_NET_BIND_SERVICE
+SecureBits=keep-caps
+NoNewPrivileges=yes
+ProtectSystem=full
+ProtectHome=true
+PrivateTmp=true
+RestrictNamespaces=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+ProtectClock=true
+ProtectControlGroups=true
+ProtectKernelTunables=true
+ProtectKernelLogs=true
+ProtectKernelModules=true
+LockPersonality=true
+RestrictSUIDSGID=true
+RemoveIPC=true
+RestrictRealtime=true
+SystemCallFilter=@system-service
+SystemCallArchitectures=native
+MemoryDenyWriteExecute=true
+# ProtectSystem=full makes /etc read-only; the badger DB underneath must still be writable.
+ReadWritePaths=/etc/step-ca/db
+
+[Install]
+WantedBy=multi-user.target
