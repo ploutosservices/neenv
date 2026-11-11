@@ -24,7 +24,7 @@ who wrote none of it rebuilds a working copy from it alone.
 | Shared services | The proxy (TLS, limits, floods), databases, object store, scheduler, mail and chat, each one layer every application uses |
 | Encryption for few readers | Records only their readers can open: a household's key, customer-supplied keys in the object store |
 | Deploys and supply chain | Production changed only by audited steps; where code comes from, pinned and checked; patching |
-| Backups and restores | Each store copied off site nightly, a restore proved on a schedule, restoring one tenant, recovery targets, losing a whole site |
+| Backups and restores | Each store copied off site nightly, a restore proved on a schedule, recovery targets ([one tenant](../restore-one-tenant/README.md) is written), losing a whole site |
 | Moving a store of record | An application's database moved to another engine with no replica: one recorded state (old, draining, drained, new); the drain closes writes at the one connection point and compares every row; a service boots on the new store only once drained; rollback without a restore only until the first write on the new store; the old store's binlog, not a table checksum, proves it was left untouched. Built and rehearsed twice by one application |
 | Watching and logs | Checks, alerts and the audit log; what logs keep of tenant data, and for how long; per-tenant limits |
 | Checks, not trust | An agent's work is caught where it lands: the push refuses a commit with no reason, a check refuses what does not match |
@@ -44,7 +44,6 @@ pattern with a drill; *consider* means it is open; *declined* means it is not do
 | Security | Per-agent sandboxes beyond the production block | declined: each agent is already its own operating-system user with its own work tree and identity ([The dev box](../dev-box/README.md)) |
 | Security | Secret rotation on a schedule (OpenBao leases, dynamic database credentials) | declined: the owner rotates after a leak, all at once on one day, not on a calendar; scheduled rotation broke more than it protected here. Where secrets live and who reads them is in [The root of trust](../root-of-trust/README.md) |
 | Security | A hardware token for the CA keys | declined by the owner's ruling: no offline root and no separate custody to remember; the root key is an item in the password manager, written back only to mint an intermediate and removed again ([Disaster recovery](../disaster-recovery/README.md)) |
-| Reliability | Restoring one tenant without the others | adopt: there are tenants outside the family |
 | Operations | Service objectives (SLOs) | declined: one decider, no contracts that promise an availability figure; the alerts say what is broken and what to do |
 | Delivery | Rollback without losing data; expand-then-contract migrations | declined from neenv: how an application changes its own schema is each application owner's practice, not the foundation's |
 | Information | Masking data copied to staging | declined by the owner's ruling: developers work against current production data, the outside tenants' included. The cost is stated, not hidden: a development machine holds real tenant data. That is one reason development machines are not log senders, and why keeping them out of production's stores by the machines themselves, not only by credentials, is an adopted idea |

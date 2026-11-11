@@ -105,6 +105,8 @@ How one layer is built well, with drills you can run yourself:
   authorise work.
 - [A standby for the CA](patterns/ca-standby/README.md). Yesterday's copy of the certificate authority in the other
   site, stopped and without its key password; one command fences the old one, unlocks the copy and proves it.
+- [Restoring one tenant](patterns/restore-one-tenant/README.md). One tenant put back from last week's backup
+  out of a database the tenants share, with proof before anyone applies it that no other tenant's row changed.
 - [Walk-through](patterns/walk-through/README.md). One new tenant, from a domain name to a signed-in page.
 - [The practice](patterns/the-practice/README.md). The written rules that let agents build and run it.
 
@@ -121,7 +123,7 @@ Every drill answers the same way, so a script can run them all:
 An arm run that exits 0 is the proof that each check can fail. A check that never fails proves nothing. Some drills
 carry their arms inside one command instead: `drill-environments.sh selftest`, the practice's
 `drill-done.sh selftest`, the `rules` mode of the patching, central-logs and time drills, `drill-capacity.sh`, and
-`drill-untrusted-input.sh gate` and `drill-ca-standby.sh` run one passing case and several broken ones, and exit 0 only when each comes out
+`drill-untrusted-input.sh gate`, `drill-ca-standby.sh` and `drill-tenant-restore.sh` run one passing case and several broken ones, and exit 0 only when each comes out
 as it must.
 
 ## Licence
