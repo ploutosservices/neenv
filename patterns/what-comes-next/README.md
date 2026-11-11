@@ -40,7 +40,7 @@ pattern with a drill; *consider* means it is open; *declined* means it is not do
 |---|---|---|
 | Security | The development machine blocked from production by the machines, not only by credentials | adopt: PostgreSQL done ([Segmentation](../segmentation/README.md)); MariaDB's account host patterns are next |
 | Delivery | Build once and promote the same artefact (a version or digest) | adopt |
-| Information | Retention, deletion and a tenant's departure | adopt: there are tenants outside the family |
+| Information | Retention, deletion and a tenant's departure | adopt: written, [Retention and a tenant's departure](../retention/README.md) |
 | Security | Per-agent sandboxes beyond the production block | declined: each agent is already its own operating-system user with its own work tree and identity ([The dev box](../dev-box/README.md)) |
 | Security | Secret rotation on a schedule (OpenBao leases, dynamic database credentials) | declined: the owner rotates after a leak, all at once on one day, not on a calendar; scheduled rotation broke more than it protected here. Where secrets live and who reads them is in [The root of trust](../root-of-trust/README.md) |
 | Security | A hardware token for the CA keys | declined by the owner's ruling: no offline root and no separate custody to remember; the root key is an item in the password manager, written back only to mint an intermediate and removed again ([Disaster recovery](../disaster-recovery/README.md)) |
